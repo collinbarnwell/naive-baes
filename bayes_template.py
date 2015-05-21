@@ -13,9 +13,13 @@ class Bayes_Classifier:
       cache of a trained classifier has been stored, it loads this cache.  Otherwise,
       the system will proceed through training.  After running this method, the classifier
       is ready to classify input text."""
-      positiveDict = {}
-      negativeDict = {}
-
+      self.positiveDict = {}
+      self.negativeDict = {}
+      if os.path.exists('positive_dictionary.txt'):
+         self.positiveDict = self.load('positive_dictionary.txt')
+         self.negativeDict = self.load('negative_dictionary.txt')
+      else:
+         self.train()
 
 
    def train(self):
@@ -29,18 +33,18 @@ class Bayes_Classifier:
          reviewTokens = self.tokenize(reviewText)
          if 'movies-1' in fileName:
             for token in reviewTokens:
-               if token in negativeDict:
-                  negativeDict[token] += 1
+               if token in self.negativeDict:
+                  self.negativeDict[token] += 1
                else:
                   negativeDict[token] = 1
          elif 'movies-5' in fileName:
             for token in reviewTokens:
-               if token in positiveDict:
-                  positiveDict[token] += 1
+               if token in self.positiveDict:
+                  self.positiveDict[token] += 1
                else:
-                  positiveDict[token] = 1
-      self.save(negativeDict, 'negative_dictionary.txt')
-      self.save(positiveDict, 'positive_dictionary.txt')
+                  self.positiveDict[token] = 1
+      self.save(self.negativeDict, 'negative_dictionary.txt')
+      self.save(self.positiveDict, 'positive_dictionary.txt')
 
 
    def classify(self, sText):
