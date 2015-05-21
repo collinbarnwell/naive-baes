@@ -51,6 +51,37 @@ class Bayes_Classifier:
       """Given a target string sText, this function returns the most likely document
       class to which the target string belongs (i.e., positive, negative or neutral).
       """
+      words = self.tokenize(sText)
+      ppos = 1.0
+      pneg = 1.0
+
+      poswords = float(sum(self.positiveDict.itervalues()))
+      negwords = float(sum(self.negativeDict.itervalues()))
+      totwords = poswords + negwords
+
+      for word in words:
+         pos = self.positiveDict.get( word, 0.0 ) + 1.0
+         neg = self.negativeDict.get( word, 0.0 ) + 1.0
+         totes = pos + neg
+
+         ppos += math.log( (pos/poswords)/(poswords/totwords) )
+         pneg += math.log( (neg/negwords)/(negwords/totwords) )
+
+      # ptot = ppos + pneg
+
+      print ppos
+      print pneg
+
+      if ppos == pneg:
+         return "neutral"
+      elif ppos > pneg:
+         return "positive"
+      else: # pneg > ppos
+         return "negative"
+
+
+
+
 
    def loadFile(self, sFilename):
       """Given a file name, return the contents of the file as a string."""
@@ -98,3 +129,10 @@ class Bayes_Classifier:
 
       return lTokens
 
+
+def t():
+   b = Bayes_Classifier()
+   print "poo tities balls bears bad horrible:\n"
+   print b.classify("poo tities balls bears bad horrible")
+   print "\nawesome great terrific praise amazing:\n"
+   print b.classify("awesome great terrific praise amazing\n")
