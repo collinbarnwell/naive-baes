@@ -4,7 +4,7 @@
 #
 #
 
-import math, os, pickle, re
+import math, os, pickle, re, random
 
 class Bayes_Classifier:
 
@@ -25,6 +25,8 @@ class Bayes_Classifier:
    def train(self):
       """Trains the Naive Bayes Sentiment Classifier."""
       FileList = []
+      good = 0
+      bad = 0
       for fFileObj in os.walk('movies_reviews/'):
          FileList = fFileObj[2]
          break
@@ -32,37 +34,132 @@ class Bayes_Classifier:
          reviewText = self.loadFile('movies_reviews/' + fileName)
          reviewTokens = self.tokenize(reviewText)
          if 'movies-1' in fileName:
+            good += 1
             for token in reviewTokens:
                if token in self.negativeDict:
                   self.negativeDict[token] += 1
                else:
                   negativeDict[token] = 1
          elif 'movies-5' in fileName:
+            bad += 1
             for token in reviewTokens:
                if token in self.positiveDict:
                   self.positiveDict[token] += 1
                else:
                   self.positiveDict[token] = 1
+      # print "There are ", good, " good reviews and ", bad, " bad reviews"
       self.save(self.negativeDict, 'negative_dictionary.txt')
       self.save(self.positiveDict, 'positive_dictionary.txt')
 
+   def evaluate(self):
+      FileList = []
+      TenFold = [[] for i in range(10)]
+      for fFileObj in os.walk('movies_reviews/'):
+         FileList = fFileObj[2]
+         break
+      random.shuffle(FileList)
 
-   def classify(self, sText):
+      for fileName in FileList:
+
+         r = random.uniform(0,10)
+         TenFold[int(r)].append(fileName)
+
+      posPrecision = 0
+      posRecall = 0
+      negPrecision = 0
+      negRecall = 0
+      posFmeasure = 0
+      negFmeasure = 0
+      for i in range(10):
+         testData = TenFold[i]
+         trainingData = []
+         for j in range(10):
+            if i == j:
+               continue
+            trainingData = list(set(trainingData) | set(TenFold[j]))
+         self.tPositiveDict = {}
+         self.tNegativeDict = {}
+
+         for fileName in trainingData:
+            reviewText = self.loadFile('movies_reviews/' + fileName)
+            reviewTokens = self.tokenize(reviewText)
+            if 'movies-1' in fileName:
+               for token in reviewTokens:
+                  if token in self.tNegativeDict:
+                     self.tNegativeDict[token] += 1
+                  else:
+                     self.tNegativeDict[token] = 1
+            elif 'movies-5' in fileName:
+               for token in reviewTokens:
+                  if token in self.tPositiveDict:
+                     self.tPositiveDict[token] += 1
+                  else:
+                     self.tPositiveDict[token] = 1
+         posCorrect = 0
+         negCorrect = 0
+         posWrong = 0
+         negWrong = 0
+         for instance in testData:
+            instanceText = self.loadFile('movies_reviews/' + instance)
+            if(self.classify(instanceText) == 'positive'):
+               if 'movies-5' in instance:
+                  posCorrect += 1
+               else:
+                  posWrong += 1
+            if(self.classify(instanceText) == 'negative'):
+               if 'movies-1' in instance:
+                  negCorrect += 1
+               else:
+                  negWrong += 1
+         PP = float(posCorrect) / (float(posCorrect) + float(posWrong))
+         PR = float(posCorrect) / (float(posCorrect) + float(negWrong))
+         NP = float(negCorrect) / (float(negCorrect) + float(negWrong))
+         NR = float(negCorrect) / (float(negCorrect) + float(posWrong))
+         PFM = 2 * PP * PR /(PP + PR)
+         NFM = 2 * NP * NR / (NP +NR)
+
+         posPrecision += PP
+         posRecall += PR
+         negPrecision += NP
+         negRecall += NR
+         posFmeasure += PFM
+         negFmeasure += NFM
+
+      posPrecision /= 10
+      posRecall /= 10
+      negPrecision /= 10
+      negRecall /= 10
+      negFmeasure /= 10
+      posFmeasure /= 10
+
+      print posPrecision, " ", posRecall, " ", negPrecision, " ", negRecall, " ", negFmeasure, " ", posFmeasure, " "
+
+
+
+   def classify(self, sText, tenFold = False):
       """Given a target string sText, this function returns the most likely document
       class to which the target string belongs (i.e., positive, negative or neutral).
       """
+      if tenFold == False:
+         posDict = self.positiveDict
+         negDict = self.negativeDict
+      else:
+         posDict = self.tPositiveDict
+         negDict = self.tNegativeDict
+
+
       words = self.tokenize(sText)
       ppos = 1.0
       pneg = 1.0
 
-      poswords = float(sum(self.positiveDict.itervalues()))
-      negwords = float(sum(self.negativeDict.itervalues()))
+      poswords = float(sum(posDict.itervalues()))
+      negwords = float(sum(negDict.itervalues()))
       totwords = poswords + negwords
 
 
       for word in words:
-         pos = self.positiveDict.get( word, 0.0 ) + 1.0
-         neg = self.negativeDict.get( word, 0.0 ) + 1.0
+         pos = posDict.get( word, 0.0 ) + 1.0
+         neg = negDict.get( word, 0.0 ) + 1.0
 
          # print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
          ppos += math.log( pos/(poswords/totwords) )
@@ -70,12 +167,11 @@ class Bayes_Classifier:
 
       # ptot = ppos + pneg
 
-      print "Positive: ", ppos
-      print "Negative: ", pneg
+      # print "Positive: ", ppos
+      # print "Negative: ", pneg
 
-      if ppos == pneg:
-         return "neutral"
-      elif ppos > pneg:
+
+      if ppos >= pneg:
          return "positive"
       else: # pneg > ppos
          return "negative"
