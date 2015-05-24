@@ -64,7 +64,7 @@ class Bayes_Classifier:
          pos = self.positiveDict.get( word, 0.0 ) + 1.0
          neg = self.negativeDict.get( word, 0.0 ) + 1.0
 
-         print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
+         # print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
          ppos += math.log( pos/(poswords/totwords) )
          pneg += math.log( neg/(negwords/totwords) )
 

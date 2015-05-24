@@ -9,11 +9,11 @@ import math, os, pickle, re
 def processText(text):
    """Removes punctuation, conjunction"""
    things_to_remove = ['and', 'but', 'to', 'the', 'or']
-   dc = text.lower()
    re.sub("[^a-zA-Z]+",'', dc)
    for thing in things_to_remove:
       re.sub(thing, '', dc)
    return dc
+
 
 
 class Bayes_Classifier:
@@ -40,8 +40,7 @@ class Bayes_Classifier:
          break
       for fileName in FileList:
          reviewText = self.loadFile('movies_reviews/' + fileName)
-         processedText = processText(reviewText)
-         reviewTokens = self.tokenize(processedText)
+         reviewTokens = self.tokenize(reviewText)
          if 'movies-1' in fileName:
             for token in reviewTokens:
                if token in self.negativeDict:
@@ -70,18 +69,19 @@ class Bayes_Classifier:
       negwords = float(sum(self.negativeDict.itervalues()))
       totwords = poswords + negwords
 
+
       for word in words:
          pos = self.positiveDict.get( word, 0.0 ) + 1.0
          neg = self.negativeDict.get( word, 0.0 ) + 1.0
-         totes = pos + neg
 
-         ppos += math.log( (pos/poswords)/(poswords/totwords) )
-         pneg += math.log( (neg/negwords)/(negwords/totwords) )
+         # print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
+         ppos += math.log( pos/(poswords/totwords) )
+         pneg += math.log( neg/(negwords/totwords) )
 
       # ptot = ppos + pneg
 
-      print ppos
-      print pneg
+      print "Positive: ", ppos
+      print "Negative: ", pneg
 
       if ppos == pneg:
          return "neutral"
@@ -89,9 +89,6 @@ class Bayes_Classifier:
          return "positive"
       else: # pneg > ppos
          return "negative"
-
-
-
 
 
    def loadFile(self, sFilename):
@@ -123,21 +120,42 @@ class Bayes_Classifier:
       """Given a string of text sText, returns a list of the individual tokens that
       occur in that string (in order)."""
 
+      sText = sText.lower()
+
       lTokens = []
       sToken = ""
+
+      last_word = ""
+
       for c in sText:
+         # no cross-sentence bi-grams
+         if c == ".":
+            last_word = ""
+
          if re.match("[a-zA-Z0-9]", str(c)) != None or c == "\"" or c == "_" or c == "-":
             sToken += c
          else:
             if sToken != "":
                lTokens.append(sToken)
+
+               # add bigram to tokens
+               if last_word != "":
+                  bigram = last_word + " " + sToken
+                  lTokens.append(bigram)
+
+               last_word = sToken
                sToken = ""
+
             if c.strip() != "":
                lTokens.append(str(c.strip()))
 
       if sToken != "":
          lTokens.append(sToken)
+         if last_word != "":
+            bigram = last_word + " " + sToken
+            lTokens.append(bigram)
 
+      print lTokens
       return lTokens
 
 
@@ -147,3 +165,7 @@ def t():
    print b.classify("poo tities balls bears bad horrible")
    print "\nawesome great terrific praise amazing:\n"
    print b.classify("awesome great terrific praise amazing\n")
+
+def test(string):
+   b = Bayes_Classifier()
+   print string, ' was rated \n', b.classify(string)
