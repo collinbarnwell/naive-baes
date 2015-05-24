@@ -59,18 +59,19 @@ class Bayes_Classifier:
       negwords = float(sum(self.negativeDict.itervalues()))
       totwords = poswords + negwords
 
+
       for word in words:
          pos = self.positiveDict.get( word, 0.0 ) + 1.0
          neg = self.negativeDict.get( word, 0.0 ) + 1.0
-         totes = pos + neg
 
-         ppos += math.log( (pos/poswords)/(poswords) )
-         pneg += math.log( (neg/negwords)/(negwords) )
+         print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
+         ppos += math.log( pos/(poswords/totwords) )
+         pneg += math.log( neg/(negwords/totwords) )
 
       # ptot = ppos + pneg
 
-      print ppos
-      print pneg
+      print "Positive: ", ppos
+      print "Negative: ", pneg
 
       if ppos == pneg:
          return "neutral"
@@ -133,3 +134,7 @@ def t():
    print b.classify("poo tities balls bears bad horrible")
    print "\nawesome great terrific praise amazing:\n"
    print b.classify("awesome great terrific praise amazing\n")
+
+def test(string):
+   b = Bayes_Classifier()
+   print string, ' was rated \n', b.classify(string)
