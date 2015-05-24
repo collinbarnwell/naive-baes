@@ -6,6 +6,16 @@
 
 import math, os, pickle, re
 
+def processText(text):
+   """Removes punctuation, conjunction"""
+   things_to_remove = ['and', 'but', 'to', 'the', 'or']
+   dc = text.lower()
+   re.sub("[^a-zA-Z]+",'', dc)
+   for thing in things_to_remove:
+      re.sub(thing, '', dc)
+   return dc
+
+
 class Bayes_Classifier:
 
    def __init__(self):
@@ -30,7 +40,8 @@ class Bayes_Classifier:
          break
       for fileName in FileList:
          reviewText = self.loadFile('movies_reviews/' + fileName)
-         reviewTokens = self.tokenize(reviewText)
+         processedText = processText(reviewText)
+         reviewTokens = self.tokenize(processedText)
          if 'movies-1' in fileName:
             for token in reviewTokens:
                if token in self.negativeDict:
@@ -64,8 +75,8 @@ class Bayes_Classifier:
          neg = self.negativeDict.get( word, 0.0 ) + 1.0
          totes = pos + neg
 
-         ppos += math.log( (pos/poswords)/(poswords) )
-         pneg += math.log( (neg/negwords)/(negwords) )
+         ppos += math.log( (pos/poswords)/(poswords/totwords) )
+         pneg += math.log( (neg/negwords)/(negwords/totwords) )
 
       # ptot = ppos + pneg
 
@@ -78,6 +89,9 @@ class Bayes_Classifier:
          return "positive"
       else: # pneg > ppos
          return "negative"
+
+
+
 
 
    def loadFile(self, sFilename):
