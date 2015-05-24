@@ -124,6 +124,8 @@ class Bayes_Classifier:
          negRecall += NR
          posFmeasure += PFM
          negFmeasure += NFM
+         print "==================TEST RUN ", i, "==============="
+         print "positive precision: ", PP, " positive recall: ", PR, " negative precision: ", NP, " negative recall: ", NR, " negative F measure: ", NFM, " positive F measure: ", PFM
 
       posPrecision /= 10
       posRecall /= 10
@@ -131,8 +133,8 @@ class Bayes_Classifier:
       negRecall /= 10
       negFmeasure /= 10
       posFmeasure /= 10
-
-      print posPrecision, " ", posRecall, " ", negPrecision, " ", negRecall, " ", negFmeasure, " ", posFmeasure, " "
+      print "\n FINAL RESULTS"
+      print "positive precision: ", posPrecision, " positive recall: ", posRecall, " negative precision: ", negPrecision, " negative recall: ", negRecall, " negative F measure: ", negFmeasure, " positive F measure: ", posFmeasure
 
 
 
