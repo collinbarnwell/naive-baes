@@ -15,9 +15,9 @@ class Bayes_Classifier:
       is ready to classify input text."""
       self.positiveDict = {}
       self.negativeDict = {}
-      if os.path.exists('positive_dictionary.txt'):
-         self.positiveDict = self.load('positive_dictionary.txt')
-         self.negativeDict = self.load('negative_dictionary.txt')
+      if os.path.exists('best_positive_dictionary.txt'):
+         self.positiveDict = self.load('best_positive_dictionary.txt')
+         self.negativeDict = self.load('best_negative_dictionary.txt')
       else:
          self.train()
 
@@ -39,7 +39,7 @@ class Bayes_Classifier:
                if token in self.negativeDict:
                   self.negativeDict[token] += 1
                else:
-                  negativeDict[token] = 1
+                  self.negativeDict[token] = 1
          elif 'movies-5' in fileName:
             bad += 1
             for token in reviewTokens:
@@ -48,8 +48,8 @@ class Bayes_Classifier:
                else:
                   self.positiveDict[token] = 1
       # print "There are ", good, " good reviews and ", bad, " bad reviews"
-      self.save(self.negativeDict, 'negative_dictionary.txt')
-      self.save(self.positiveDict, 'positive_dictionary.txt')
+      self.save(self.negativeDict, 'best_negative_dictionary.txt')
+      self.save(self.positiveDict, 'best_positive_dictionary.txt')
 
    def evaluate(self):
       FileList = []
@@ -126,6 +126,8 @@ class Bayes_Classifier:
          negFmeasure += NFM
          print "==================TEST RUN ", i, "==============="
          print "positive precision: ", PP, " positive recall: ", PR, " negative precision: ", NP, " negative recall: ", NR, " negative F measure: ", NFM, " positive F measure: ", PFM
+         print "Total classified positive: ", posCorrect + posWrong
+         print "Total classified negative: ", negCorrect + negWrong, "\n"
 
       posPrecision /= 10
       posRecall /= 10
@@ -154,8 +156,8 @@ class Bayes_Classifier:
       ppos = 1.0
       pneg = 1.0
 
-      poswords = float(sum(posDict.itervalues()))
-      negwords = float(sum(negDict.itervalues()))
+      poswords = float(sum(posDict.itervalues()) / 2)
+      negwords = float(sum(negDict.itervalues()) / 2)
       totwords = poswords + negwords
 
 
@@ -164,8 +166,9 @@ class Bayes_Classifier:
          neg = negDict.get( word, 0.0 ) + 1.0
 
          # print "It occurs ", pos, " in positive reviews and ", neg, "  times in negative reviews"
-         ppos += math.log( pos/(poswords/totwords) )
-         pneg += math.log( neg/(negwords/totwords) )
+         priorPos = .6
+         ppos += math.log( pos/poswords * priorPos )
+         pneg += math.log( neg/negwords * (1- priorPos) )
 
       # ptot = ppos + pneg
 

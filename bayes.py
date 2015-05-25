@@ -52,6 +52,7 @@ class Bayes_Classifier:
       self.save(self.positiveDict, 'positive_dictionary.txt')
 
    def evaluate(self):
+      """Performs 10-fold cross validation to test the function"""
       FileList = []
       TenFold = [[] for i in range(10)]
       for fFileObj in os.walk('movies_reviews/'):
@@ -126,6 +127,8 @@ class Bayes_Classifier:
          negFmeasure += NFM
          print "==================TEST RUN ", i, "==============="
          print "positive precision: ", PP, " positive recall: ", PR, " negative precision: ", NP, " negative recall: ", NR, " negative F measure: ", NFM, " positive F measure: ", PFM
+         print "Total classified positive: ", posCorrect + posWrong
+         print "Total classified negative: ", negCorrect + negWrong, "\n"
 
       posPrecision /= 10
       posRecall /= 10
